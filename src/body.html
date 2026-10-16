@@ -1,0 +1,325 @@
+<title>Breath</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0E1222">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@300;400;500;600;700&display=swap">
+<style>
+/* Layout: one screen at a time — home (dial + three rows + Start), session (dial centre stage), done.
+   "Tuning dial" palette from the Android app: night ink, moonlight text, colour only for chord roles. */
+:root {
+  --ink: #0E1222;
+  --ink-rise: #151A2E;
+  --surface: #161B30;
+  --raised: #232A45;
+  --engraving: #2A3150;
+  --engraving-strong: #3A4366;
+  --hairline: #222944;
+  --moon: #DCDFEA;
+  --pewter: #8C93AB;
+  --faint: #5B6380;
+  --root: #F2D7A0;
+  --third: #F59AAE;
+  --fifth: #86D0E8;
+  --seventh: #A68BF0;
+  --scrim: rgba(14, 18, 34, 0.62);
+  --font: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--ink) linear-gradient(180deg, var(--ink-rise) 0%, var(--ink) 42%) no-repeat;
+  color: var(--moon);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; border-radius: 6px; }
+#app { height: 100%; }
+.screen {
+  height: 100%;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+}
+
+/* ---------- Home ---------- */
+#home { display: flex; flex-direction: column; }
+.topbar { display: flex; align-items: center; gap: 8px; min-height: 52px; }
+.brand { flex: 1; color: var(--pewter); font-size: 15px; padding-left: 4px; letter-spacing: 0.02em; }
+.icon-btn {
+  width: 44px; height: 44px; border: 0; background: none; border-radius: 22px;
+  display: grid; place-items: center; color: var(--pewter);
+}
+.icon-btn:hover { background: var(--surface); }
+.icon-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.home-body {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding-bottom: 16px;
+}
+.preview-cell { width: 100%; display: flex; justify-content: center; }
+#previewDial { width: min(100%, 420px, 52vh); aspect-ratio: 1; height: auto; display: block; }
+.details { width: 100%; max-width: 480px; display: flex; flex-direction: column; align-items: center; }
+.session-btn {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 48px;
+  background: none; border: 0; padding: 0 4px; font-size: 30px; font-weight: 500; line-height: 36px;
+  text-wrap: balance;
+}
+.session-btn svg { width: 20px; height: 20px; fill: none; stroke: var(--pewter); stroke-width: 1.8; stroke-linecap: round; }
+#sessionDesc { margin: 2px 0 18px; color: var(--pewter); font-size: 17px; line-height: 24px; text-align: center; padding: 0 12px; text-wrap: pretty; }
+#rows { width: 100%; border-top: 1px solid var(--hairline); }
+.row {
+  width: 100%; min-height: 56px; display: flex; align-items: center; gap: 14px;
+  background: none; border: 0; border-bottom: 1px solid var(--hairline); padding: 6px 4px; text-align: left;
+}
+.row:hover { background: color-mix(in srgb, var(--surface) 60%, transparent); }
+.row svg { width: 22px; height: 22px; flex: none; fill: none; stroke: var(--pewter); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.row-label { flex: 1; font-size: 17px; }
+.row-value { color: var(--pewter); font-size: 17px; text-align: right; min-width: 0; }
+.start {
+  width: 100%; height: 60px; margin-top: 24px; border: 0; border-radius: 30px;
+  background: var(--moon); color: var(--ink); font-size: 17px; font-weight: 600; letter-spacing: 0.02em;
+}
+.start:active { transform: scale(0.99); }
+.fineprint { margin: 14px 0 0; color: var(--faint); font-size: 13px; text-align: center; }
+.linkish { background: none; border: 0; padding: 0; color: var(--pewter); text-decoration: underline; text-underline-offset: 3px; font-size: 13px; }
+
+@media (min-width: 720px) and (min-aspect-ratio: 1/1), (min-width: 900px) {
+  .home-body { flex-direction: row; align-items: center; justify-content: center; gap: 40px; }
+  .preview-cell { flex: 1; max-width: 560px; }
+  #previewDial { width: min(100%, 520px, 78vh); }
+  .details { flex: 1; align-items: flex-start; }
+  #sessionDesc { text-align: left; padding: 0 4px; }
+}
+
+/* ---------- Session ---------- */
+#session {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "title time" "dial dial" "chord chord" "controls controls";
+  padding-block: 12px 12px;
+  user-select: none;
+}
+#sTitle { grid-area: title; color: var(--pewter); font-size: 14px; align-self: center; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#sTime { grid-area: time; color: var(--pewter); font-size: 14px; font-variant-numeric: tabular-nums; align-self: center; }
+.dial-cell { grid-area: dial; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 12px; }
+.dial-box { flex: 1; min-height: 0; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+#sessionDial { display: block; }
+.phase { text-align: center; padding-top: 12px; flex: none; }
+#phaseWord { font-size: 34px; font-weight: 300; line-height: 40px; letter-spacing: 0.01em; }
+#phaseCount { color: var(--pewter); font-size: 17px; font-weight: 600; height: 22px; font-variant-numeric: tabular-nums; }
+#chordBlock { grid-area: chord; display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 18px; min-height: 0; }
+.controls-wrap { grid-area: controls; height: 64px; display: flex; align-items: center; justify-content: center; }
+#controls { display: flex; gap: 12px; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+#controls.visible { opacity: 1; pointer-events: auto; }
+.pill { height: 44px; padding: 0 24px; border-radius: 22px; border: 0; background: var(--moon); color: var(--ink); font-size: 17px; font-weight: 600; }
+.text-btn { height: 44px; padding: 0 14px; border: 0; background: none; color: var(--pewter); font-size: 15px; border-radius: 22px; }
+#session[data-display="BREATH_ONLY"] #chordBlock { display: none; }
+
+.lead { font-size: 40px; line-height: 46px; font-weight: 600; white-space: nowrap; }
+.lead .acc { font-size: 0.72em; position: relative; top: -0.3em; }
+.lead .q { font-size: 0.6em; position: relative; top: -0.55em; margin-left: 1px; }
+.lead .slash { font-size: 0.7em; color: var(--pewter); margin-left: 2px; }
+.lead .dim {
+  display: inline-block; width: 0.24em; height: 0.24em; box-sizing: border-box;
+  border: 0.07em solid currentColor; border-radius: 50%;
+  position: relative; top: -0.42em; margin-left: 0.04em;
+}
+.long { color: var(--pewter); font-size: 15px; line-height: 21px; }
+.notes { display: flex; gap: 22px; margin-top: 14px; }
+.note { display: flex; flex-direction: column; align-items: center; }
+.note-name { font-size: 22px; line-height: 28px; font-weight: 600; }
+.note-role { font-size: 11px; line-height: 13px; color: var(--pewter); }
+.key { margin-top: 10px; color: var(--faint); font-size: 13px; }
+
+@media (min-width: 840px), (orientation: landscape) and (min-width: 560px) {
+  #session {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas: "title dial time" "chord dial ." ". dial controls";
+    padding-block: 20px 20px;
+  }
+  #sTime { justify-self: end; align-self: start; }
+  #sTitle { align-self: start; }
+  .dial-cell { padding-top: 0; }
+  #chordBlock { align-items: flex-start; text-align: left; justify-content: center; padding: 0 0 0 32px; }
+  .controls-wrap { justify-content: flex-end; }
+}
+
+/* ---------- Done ---------- */
+#done { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+#done h1 { margin: 0; font-size: 34px; font-weight: 300; line-height: 40px; text-wrap: balance; }
+#doneSummary { margin: 4px 0 0; color: var(--pewter); font-size: 17px; }
+#doneTitle { margin: 0 0 28px; color: var(--faint); }
+#done .start { max-width: 420px; margin-top: 0; }
+
+/* ---------- Sheets ---------- */
+.sheet-back {
+  position: fixed; inset: 0; z-index: 20; background: var(--scrim);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; transition: opacity 0.2s ease;
+}
+.sheet-back.open { opacity: 1; }
+.sheet {
+  width: 100%; max-width: 600px; max-height: 88%;
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  display: flex; flex-direction: column;
+  transform: translateY(28px); transition: transform 0.22s ease;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.35);
+}
+.sheet-back.open .sheet { transform: none; }
+.sheet-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px max(20px, env(safe-area-inset-right, 0px)) 8px max(20px, env(safe-area-inset-left, 0px));
+}
+#sheetTitle { flex: 1; margin: 0; font-size: 24px; font-weight: 500; line-height: 30px; }
+#sheetClose { height: 40px; padding: 0 16px; border-radius: 20px; border: 1px solid var(--engraving-strong); background: none; color: var(--moon); font-weight: 600; }
+#sheetBody {
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 4px max(20px, env(safe-area-inset-right, 0px)) calc(28px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+}
+.field { padding: 14px 0; border-bottom: 1px solid var(--hairline); }
+.field-label { font-size: 13px; color: var(--pewter); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 10px; }
+.hint { margin: 8px 0 0; color: var(--pewter); font-size: 13px; line-height: 18px; }
+.hint.pad { padding: 8px 4px 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  min-height: 40px; padding: 8px 14px; border-radius: 20px;
+  border: 1px solid var(--engraving-strong); background: none; color: var(--moon); font-size: 15px;
+}
+.chip[aria-pressed="true"] { background: var(--moon); color: var(--ink); border-color: var(--moon); font-weight: 600; }
+.row-ctl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+select {
+  min-height: 40px; padding: 6px 12px; border-radius: 10px;
+  background: var(--raised); border: 1px solid var(--engraving-strong); color: var(--moon); font-size: 17px;
+}
+.toggle { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--hairline); cursor: pointer; }
+.toggle > span { flex: 1; display: flex; flex-direction: column; }
+.toggle-label { font-size: 17px; }
+.toggle .hint { margin-top: 2px; }
+.toggle input {
+  appearance: none; -webkit-appearance: none; flex: none; margin: 0;
+  width: 48px; height: 28px; border-radius: 14px; background: var(--raised); border: 1px solid var(--engraving-strong);
+  position: relative; cursor: pointer; transition: background 0.15s;
+}
+.toggle input::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--pewter); transition: transform 0.15s, background 0.15s;
+}
+.toggle input:checked { background: var(--moon); border-color: var(--moon); }
+.toggle input:checked::after { transform: translateX(20px); background: var(--ink); }
+.slider input { width: 100%; accent-color: var(--moon); margin: 0; height: 28px; }
+.slider-ends { display: flex; justify-content: space-between; color: var(--pewter); font-size: 13px; }
+.slider-mid { color: var(--moon); font-variant-numeric: tabular-nums; }
+.picks { display: flex; flex-direction: column; }
+.pick {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  background: none; border: 0; border-bottom: 1px solid var(--hairline); padding: 12px 8px; border-radius: 0;
+}
+.pick[aria-pressed="true"] { background: var(--raised); border-radius: 12px; border-bottom-color: transparent; }
+.pick-title { font-size: 17px; font-weight: 600; }
+.pick-pattern { color: var(--pewter); font-weight: 400; margin-left: 6px; font-variant-numeric: tabular-nums; }
+.pick-d { color: var(--pewter); font-size: 14px; }
+.steppers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 4px 20px; padding: 12px 4px 4px; }
+.stepper { display: flex; align-items: center; justify-content: space-between; min-height: 48px; gap: 12px; }
+.stepper-ctl { display: flex; align-items: center; gap: 10px; }
+.stepper-ctl button { width: 40px; height: 40px; border-radius: 20px; border: 1px solid var(--engraving-strong); background: none; font-size: 20px; line-height: 1; }
+.stepper-ctl output { min-width: 3ch; text-align: center; font-size: 17px; font-variant-numeric: tabular-nums; }
+.session-item {
+  width: 100%; display: flex; align-items: center; gap: 14px; text-align: left;
+  background: none; border: 0; border-bottom: 1px solid var(--hairline); padding: 10px 8px;
+}
+.session-item[aria-current="true"] { background: var(--raised); border-radius: 12px; border-bottom-color: transparent; }
+.mini-dial { width: 64px; height: 64px; flex: none; }
+.session-text { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.session-title { font-size: 17px; font-weight: 600; }
+.session-d { color: var(--pewter); font-size: 14px; }
+.session-edited { color: var(--root); font-size: 13px; margin-top: 2px; }
+.check { color: var(--moon); font-size: 18px; }
+.about { padding: 18px 0 0; }
+.about h3 { margin: 0 0 6px; font-size: 17px; font-weight: 600; }
+.about ol { margin: 0; padding-left: 20px; color: var(--moon); font-size: 15px; line-height: 22px; }
+
+/* ---------- Toast ---------- */
+#toast {
+  position: fixed; z-index: 30; left: 50%; transform: translateX(-50%);
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  width: min(calc(100% - 32px), 460px); box-sizing: border-box;
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px 16px; border-radius: 14px; background: var(--raised); color: var(--moon);
+  font-size: 15px; line-height: 21px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+#toast::before { content: ""; flex: none; width: 10px; height: 10px; margin-top: 6px; border-radius: 50%; background: var(--fifth); }
+#toast[data-kind="warn"]::before { background: var(--third); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}
+</style>
+
+<div id="app">
+  <section id="home" class="screen">
+    <div class="topbar">
+      <span class="brand">Breath</span>
+      <button class="icon-btn" id="settingsBtn" type="button" data-aria-en="Settings" data-aria-ru="Настройки" aria-label="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+    <div class="home-body">
+      <div class="preview-cell"><canvas id="previewDial" aria-hidden="true"></canvas></div>
+      <div class="details">
+        <button class="session-btn" id="sessionBtn" type="button"><span id="sessionName">Everyday</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg></button>
+        <p id="sessionDesc"></p>
+        <div id="rows"></div>
+        <button class="start" id="startBtn" type="button" data-en="Start" data-ru="Начать">Start</button>
+        <p class="fineprint"><span data-en="Web prototype." data-ru="Веб-прототип.">Web prototype.</span> <button type="button" class="linkish" id="testLink" data-en="How to test with the screen off" data-ru="Как проверить с выключенным экраном">How to test with the screen off</button></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="session" class="screen" hidden>
+    <span id="sTitle"></span>
+    <span id="sTime"></span>
+    <div class="dial-cell">
+      <div class="dial-box"><canvas id="sessionDial" aria-hidden="true"></canvas></div>
+      <div class="phase" aria-live="polite"><div id="phaseWord"></div><div id="phaseCount">&nbsp;</div></div>
+    </div>
+    <div id="chordBlock"></div>
+    <div class="controls-wrap">
+      <div id="controls">
+        <button class="pill" id="pauseBtn" type="button">Pause</button>
+        <button class="text-btn" id="endBtn" type="button">End session</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="done" class="screen" hidden>
+    <h1 data-en="Session complete" data-ru="Сессия завершена">Session complete</h1>
+    <p id="doneSummary"></p>
+    <p id="doneTitle"></p>
+    <button class="start" id="againBtn" type="button" data-en="Breathe again" data-ru="Ещё раз">Breathe again</button>
+    <button class="text-btn" id="doneBtn" type="button" data-en="Done" data-ru="Готово">Done</button>
+  </section>
+</div>
+
+<div class="sheet-back" id="sheetBack" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head"><h2 id="sheetTitle"></h2><button type="button" id="sheetClose">Done</button></div>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<div id="toast" role="status" hidden></div>
+
+<script id="engine-src">
+/*ENGINE*/
+</script>
+<script>
+/*APP*/
+</script>
